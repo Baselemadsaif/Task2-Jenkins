@@ -95,6 +95,19 @@ pipeline {
                 echo 'Production selected. Deployment requires manual approval.'
             }
         }
+
+
+	stage('Approve Production Deploy') {
+ 	   when {
+       		 expression {
+           	     return params.ENVIRONMENT == 'prod'
+        	}
+    	   }
+    	   steps {
+            	input message: 'Approve deployment to production?', ok: 'Deploy'
+           	 echo 'Production deployment approved.'
+    	   }
+	}
     }
 
     post {
