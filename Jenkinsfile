@@ -22,12 +22,14 @@ pipeline {
 
         stage('Show Build Info') {
             steps {
-                echo "App name: ${env.APP_NAME}"
-                echo "App port: ${env.APP_PORT}"
-                echo "Selected environment: ${params.ENVIRONMENT}"
-                echo "Run tests: ${params.RUN_TESTS}"
-                echo "Show files: ${params.SHOW_FILES}"
-                echo "Build number: ${env.BUILD_NUMBER}"
+                sh '''
+                    echo "App name: $APP_NAME"
+                    echo "App port: $APP_PORT"
+                    echo "Node environment: $NODE_ENV"
+                    echo "Build number: $BUILD_NUMBER"
+                    echo "Job name: $JOB_NAME"
+                    echo "Workspace: $WORKSPACE"
+                '''
             }
         }
 
@@ -38,13 +40,7 @@ pipeline {
                 }
             }
             steps {
-                sh '''
-                    echo "Workspace:"
-                    pwd
-
-                    echo "Files:"
-                    ls -la
-                '''
+                sh 'ls -la'
             }
         }
 
@@ -64,6 +60,41 @@ pipeline {
                 sh 'npm test'
             }
         }
+
+        stage('Dev Deploy Simulation') {
+            when {
+                expression {
+                    return params.ENVIRONMENT == 'dev'
+                }
+            }
+            steps {
+                echo 'Deploying to DEV environment...'
+                sh 'echo "DEV deployment simulated successfully"'
+            }
+        }
+
+        stage('Staging Deploy Simulation') {
+            when {
+                expression {
+                    return params.ENVIRONMENT == 'staging'
+                }
+            }
+            steps {
+                echo 'Deploying to STAGING environment...'
+                sh 'echo "STAGING deployment simulated successfully"'
+            }
+        }
+
+        stage('Production Safety Check') {
+            when {
+                expression {
+                    return params.ENVIRONMENT == 'prod'
+                }
+            }
+            steps {
+                echo 'Production selected. Deployment requires manual approval.'
+            }
+        }
     }
 
     post {
@@ -72,11 +103,11 @@ pipeline {
         }
 
         success {
-            echo 'Pipeline succeeded'
+            echo "Pipeline succeeded for ${params.ENVIRONMENT}"
         }
 
         failure {
-            echo 'Pipeline failed. Check Console Output.'
+            echo "Pipeline failed for ${params.ENVIRONMENT}"
         }
     }
 }
