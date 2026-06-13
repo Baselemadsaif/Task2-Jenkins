@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        APP_NAME = 'task2-node-app'
+        APP_PORT = '3000'
+        NODE_ENV = 'development'
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
@@ -8,16 +14,22 @@ pipeline {
             }
         }
 
+        stage('Show Environment') {
+            steps {
+                sh '''
+                    echo "App name: $APP_NAME"
+                    echo "App port: $APP_PORT"
+                    echo "Node environment: $NODE_ENV"
+                    echo "Build number: $BUILD_NUMBER"
+                    echo "Job name: $JOB_NAME"
+                    echo "Workspace: $WORKSPACE"
+                '''
+            }
+        }
+
         stage('Inspect Files') {
             steps {
-
-                sh '''
-		  echo "Current workspace:"
-		        pwd
-
-		  echo "Files in repo"
-			ls -altr
-		'''
+                sh 'ls -la'
             }
         }
 
