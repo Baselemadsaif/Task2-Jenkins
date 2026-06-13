@@ -10,8 +10,14 @@ pipeline {
 
         stage('Inspect Files') {
             steps {
-                sh 'pwd'
-                sh 'ls -la'
+
+                sh '''
+		  echo "Current workspace:"
+		        pwd
+
+		  echo "Files in repo"
+			ls -altr
+		'''
             }
         }
 
