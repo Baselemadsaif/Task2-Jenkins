@@ -46,7 +46,9 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                retry(2) {
+                    sh 'npm install'
+                }
             }
         }
 
@@ -57,7 +59,9 @@ pipeline {
                 }
             }
             steps {
-                sh 'npm test'
+                timeout(time: 1, unit: 'MINUTES') {
+                    sh 'npm test'
+                }
             }
         }
 
@@ -96,18 +100,17 @@ pipeline {
             }
         }
 
-
-	stage('Approve Production Deploy') {
- 	   when {
-       		 expression {
-           	     return params.ENVIRONMENT == 'prod'
-        	}
-    	   }
-    	   steps {
-            	input message: 'Approve deployment to production?', ok: 'Deploy'
-           	 echo 'Production deployment approved.'
-    	   }
-	}
+        stage('Approve Production Deploy') {
+            when {
+                expression {
+                    return params.ENVIRONMENT == 'prod'
+                }
+            }
+            steps {
+                input message: 'Approve deployment to production?', ok: 'Deploy'
+                echo 'Production deployment approved.'
+            }
+        }
     }
 
     post {
@@ -121,6 +124,10 @@ pipeline {
 
         failure {
             echo "Pipeline failed for ${params.ENVIRONMENT}"
+        }
+
+        aborted {
+            echo "Pipeline was aborted."
         }
     }
 }
