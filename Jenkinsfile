@@ -43,6 +43,23 @@ pipeline {
                 }
             }
         }
+	stage('Use Username Password Credential') {
+ 	   steps {
+       		 withCredentials([usernamePassword(
+           		 credentialsId: 'TEST_USERNAME_PASSWORD',
+            		 usernameVariable: 'MY_USERNAME',
+            		 passwordVariable: 'MY_PASSWORD'
+        		)]) {
+            			sh '''
+                		echo "Username credential loaded:"
+                		echo "$MY_USERNAME"
+
+                		echo "Password is hidden. Password length:"
+                		echo "$MY_PASSWORD" | wc -c
+            		'''
+        		}
+    		}
+	}
 
         stage('Inspect Files') {
             when {
