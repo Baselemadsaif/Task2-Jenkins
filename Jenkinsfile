@@ -25,13 +25,22 @@ pipeline {
             steps {
                 sh '''
                     echo "App name: $APP_NAME"
-                    echo "App port: $APP_PORT"
-                    echo "Node environment: $NODE_ENV"
+                    echo "Environment: $NODE_ENV"
                     echo "Build number: $BUILD_NUMBER"
-                    echo "Job name: $JOB_NAME"
                     echo "Workspace: $WORKSPACE"
-                    echo "Package name: $PACKAGE_NAME"
                 '''
+            }
+        }
+
+        stage('Use Secret Safely') {
+            steps {
+                withCredentials([string(credentialsId: 'MY_SECRET_TOKEN', variable: 'TOKEN')]) {
+                    sh '''
+                        echo "Secret was loaded successfully"
+                        echo "Secret length:"
+                        echo "$TOKEN" | wc -c
+                    '''
+                }
             }
         }
 
@@ -74,44 +83,12 @@ pipeline {
 
                     echo "App name: $APP_NAME" > dist/build-info.txt
                     echo "Build number: $BUILD_NUMBER" >> dist/build-info.txt
-                    echo "Job name: $JOB_NAME" >> dist/build-info.txt
                     echo "Environment: $NODE_ENV" >> dist/build-info.txt
-                    echo "Workspace: $WORKSPACE" >> dist/build-info.txt
                     echo "Build date: $(date)" >> dist/build-info.txt
 
                     tar -czf dist/$PACKAGE_NAME app.js package.json test.js Jenkinsfile
 
-                    echo "Created files:"
                     ls -lah dist
-                '''
-            }
-        }
-
-        stage('Stash Artifact') {
-            steps {
-                stash name: 'dist-files', includes: 'dist/**'
-            }
-        }
-
-        stage('Unstash Artifact Test') {
-            steps {
-                sh 'rm -rf dist'
-                unstash 'dist-files'
-                sh '''
-                    echo "Files restored using unstash:"
-                    ls -lah dist
-                '''
-            }
-        }
-
-        stage('Inspect Artifact Contents') {
-            steps {
-                sh '''
-                    echo "Build info file:"
-                    cat dist/build-info.txt
-
-                    echo "Package contents:"
-                    tar -tzf dist/$PACKAGE_NAME
                 '''
             }
         }
