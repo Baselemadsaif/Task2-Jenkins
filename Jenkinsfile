@@ -5,6 +5,7 @@ pipeline {
         choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Choose target environment')
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run npm tests?')
         booleanParam(name: 'SHOW_FILES', defaultValue: true, description: 'Show files in workspace?')
+	booleanParam(name: 'BUILD_DOCKER', defaultValue: true, description: 'Build Docker image?')
     }
 
     environment {
@@ -115,7 +116,25 @@ pipeline {
                 archiveArtifacts artifacts: 'dist/**', fingerprint: true
             }
         }
-    }
+	
+	stage('Build Docker Image') {
+ 	   when {
+       		 expression {
+           		 return params.BUILD_DOCKER
+        	}
+    	}
+    	   steps {
+            sh '''
+                docker build -t $APP_NAME:$BUILD_NUMBER .
+                docker images | grep $APP_NAME
+            '''
+         }
+      }
+   }
+
+	
+
+
 
     post {
         always {
