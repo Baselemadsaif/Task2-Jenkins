@@ -87,6 +87,35 @@ pipeline {
             }
         }
 
+        stage('Stash Artifact') {
+            steps {
+                stash name: 'dist-files', includes: 'dist/**'
+            }
+        }
+
+        stage('Unstash Artifact Test') {
+            steps {
+                sh 'rm -rf dist'
+                unstash 'dist-files'
+                sh '''
+                    echo "Files restored using unstash:"
+                    ls -lah dist
+                '''
+            }
+        }
+
+        stage('Inspect Artifact Contents') {
+            steps {
+                sh '''
+                    echo "Build info file:"
+                    cat dist/build-info.txt
+
+                    echo "Package contents:"
+                    tar -tzf dist/$PACKAGE_NAME
+                '''
+            }
+        }
+
         stage('Archive Artifact') {
             steps {
                 archiveArtifacts artifacts: 'dist/**', fingerprint: true
