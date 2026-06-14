@@ -11,6 +11,7 @@ pipeline {
         APP_NAME = 'task2-node-app'
         APP_PORT = '3000'
         NODE_ENV = "${params.ENVIRONMENT}"
+        PACKAGE_NAME = "task2-node-app-${BUILD_NUMBER}.tar.gz"
     }
 
     stages {
@@ -29,6 +30,7 @@ pipeline {
                     echo "Build number: $BUILD_NUMBER"
                     echo "Job name: $JOB_NAME"
                     echo "Workspace: $WORKSPACE"
+                    echo "Package name: $PACKAGE_NAME"
                 '''
             }
         }
@@ -65,50 +67,29 @@ pipeline {
             }
         }
 
-        stage('Dev Deploy Simulation') {
-            when {
-                expression {
-                    return params.ENVIRONMENT == 'dev'
-                }
-            }
+        stage('Create Build Artifact') {
             steps {
-                echo 'Deploying to DEV environment...'
-                sh 'echo "DEV deployment simulated successfully"'
+                sh '''
+                    mkdir -p dist
+
+                    echo "App name: $APP_NAME" > dist/build-info.txt
+                    echo "Build number: $BUILD_NUMBER" >> dist/build-info.txt
+                    echo "Job name: $JOB_NAME" >> dist/build-info.txt
+                    echo "Environment: $NODE_ENV" >> dist/build-info.txt
+                    echo "Workspace: $WORKSPACE" >> dist/build-info.txt
+                    echo "Build date: $(date)" >> dist/build-info.txt
+
+                    tar -czf dist/$PACKAGE_NAME app.js package.json test.js Jenkinsfile
+
+                    echo "Created files:"
+                    ls -lah dist
+                '''
             }
         }
 
-        stage('Staging Deploy Simulation') {
-            when {
-                expression {
-                    return params.ENVIRONMENT == 'staging'
-                }
-            }
+        stage('Archive Artifact') {
             steps {
-                echo 'Deploying to STAGING environment...'
-                sh 'echo "STAGING deployment simulated successfully"'
-            }
-        }
-
-        stage('Production Safety Check') {
-            when {
-                expression {
-                    return params.ENVIRONMENT == 'prod'
-                }
-            }
-            steps {
-                echo 'Production selected. Deployment requires manual approval.'
-            }
-        }
-
-        stage('Approve Production Deploy') {
-            when {
-                expression {
-                    return params.ENVIRONMENT == 'prod'
-                }
-            }
-            steps {
-                input message: 'Approve deployment to production?', ok: 'Deploy'
-                echo 'Production deployment approved.'
+                archiveArtifacts artifacts: 'dist/**', fingerprint: true
             }
         }
     }
