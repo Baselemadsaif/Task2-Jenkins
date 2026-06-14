@@ -125,8 +125,8 @@ pipeline {
     	}
     	   steps {
             sh '''
-                docker build -t $APP_NAME:$BUILD_NUMBER .
-                docker images | grep $APP_NAME
+                sudo docker build -t $APP_NAME:$BUILD_NUMBER .
+                sudo docker images | grep $APP_NAME
             '''
          }
       }
